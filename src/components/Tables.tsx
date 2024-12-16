@@ -101,7 +101,7 @@ const Tables = () => {
       const numToSelect = Number(value);
       allSelections.clear();
       const newSelections = new Map(allSelections);
-      console.log("artworks", artworks);
+      // console.log("artworks", artworks);
       if (page === 1) {
         if (numToSelect <= artworks.length) {
           // Select only items on the current page up to the desired number

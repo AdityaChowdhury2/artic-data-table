@@ -8,7 +8,7 @@ import { FaChevronDown } from "react-icons/fa";
 
 const CustomHeader = memo(
   ({ handleSubmit }: { handleSubmit: (value: string) => void }) => {
-    console.log("CustomHeader");
+    // console.log("CustomHeader");
     const [value, setValue] = useState<string>("");
     const [isValid, setIsValid] = useState<boolean>(false);
     const overlayRef = useRef<OverlayPanel>(null);
