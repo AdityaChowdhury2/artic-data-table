@@ -1,0 +1,27 @@
+.p-datatable {
+  font-size: 0.8rem;
+}
+.custom-header .p-column-header-content {
+  display: flex;
+  /* justify-content: space-between; */
+  align-items: center;
+  gap: 0.5rem;
+  flex-direction: row-reverse;
+}
+.p-column-header > span {
+  display: block;
+  width: 100%;
+}
+
+.p-column-header > span > button {
+  display: block;
+  width: 100%;
+}
+/* 
+.p-selection-column .p-checkbox input[type="checkbox"] {
+  border: 1px solid #007bff;
+} */
+.p-checkbox-input {
+  background-color: #007bff;
+  border: 1px solid #007bff;
+}
