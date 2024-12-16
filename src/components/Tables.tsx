@@ -102,7 +102,7 @@ const Tables = () => {
       allSelections.clear();
       const newSelections = new Map(allSelections);
       // console.log("artworks", artworks);
-      if (page === 1) {
+      if (page < Math.ceil(numToSelect / rows)) {
         if (numToSelect <= artworks.length) {
           // Select only items on the current page up to the desired number
           artworks.slice(0, numToSelect).forEach((item) => {
@@ -114,17 +114,13 @@ const Tables = () => {
             newSelections.set(item.id, item);
           });
         }
-      } else if (page < Math.ceil(numToSelect / rows)) {
-        artworks.forEach((item) => {
-          newSelections.set(item.id, item);
-        });
-      } else if (page === numToSelect % rows) {
+      } else if (page === Math.ceil(numToSelect / rows)) {
         artworks.slice(0, numToSelect % rows).forEach((item) => {
           newSelections.set(item.id, item);
         });
       }
       setPagesHaveSelectedItems(Math.ceil(numToSelect / rows));
-      setLastPageHaveSelectedItems(numToSelect % rows);
+      setLastPageHaveSelectedItems(Math.ceil(numToSelect % rows));
 
       setAllSelections(newSelections);
 
