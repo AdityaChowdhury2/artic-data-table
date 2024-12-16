@@ -5,10 +5,9 @@ import {
   DataTableSelectionMultipleChangeEvent,
   DataTableValueArray,
 } from "primereact/datatable";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IData, IPagination, IResponse } from "../interfaces/response";
 import { Paginator, PaginatorPageChangeEvent } from "primereact/paginator";
-
 import CustomHeader from "./CustomHeader";
 
 const Tables = () => {
@@ -37,14 +36,17 @@ const Tables = () => {
     total_pages: 0,
     next_url: "",
   });
-  const columns = [
-    { field: "title", header: "Title" },
-    { field: "place_of_origin", header: "Place of Origin" },
-    { field: "artist_display", header: "Artist Display" },
-    { field: "inscriptions", header: "Inscriptions" },
-    { field: "date_start", header: "Start Date" },
-    { field: "date_end", header: "End Date" },
-  ];
+  const columns = useMemo(
+    () => [
+      { field: "title", header: "Title" },
+      { field: "place_of_origin", header: "Place of Origin" },
+      { field: "artist_display", header: "Artist Display" },
+      { field: "inscriptions", header: "Inscriptions" },
+      { field: "date_start", header: "Start Date" },
+      { field: "date_end", header: "End Date" },
+    ],
+    []
+  );
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -93,6 +95,58 @@ const Tables = () => {
     }
   }, [page]);
 
+  const handleSubmit = useCallback(
+    (value: string) => {
+      visitedPage.current = [];
+      const numToSelect = Number(value);
+      allSelections.clear();
+      const newSelections = new Map(allSelections);
+      console.log("artworks", artworks);
+      if (page === 1) {
+        if (numToSelect <= artworks.length) {
+          // Select only items on the current page up to the desired number
+          artworks.slice(0, numToSelect).forEach((item) => {
+            newSelections.set(item.id, item);
+          });
+        } else {
+          // Select all items on the current page
+          artworks.forEach((item) => {
+            newSelections.set(item.id, item);
+          });
+        }
+      } else if (page < Math.ceil(numToSelect / rows)) {
+        artworks.forEach((item) => {
+          newSelections.set(item.id, item);
+        });
+      } else if (page === numToSelect % rows) {
+        artworks.slice(0, numToSelect % rows).forEach((item) => {
+          newSelections.set(item.id, item);
+        });
+      }
+      setPagesHaveSelectedItems(Math.ceil(numToSelect / rows));
+      setLastPageHaveSelectedItems(numToSelect % rows);
+
+      setAllSelections(newSelections);
+
+      // Update selected products
+      setSelectedProducts(
+        artworks.filter((item) => newSelections.has(item.id))
+      );
+    },
+    [artworks]
+  );
+
+  const SelectionColumn = useMemo(
+    () => (
+      <Column
+        selectionMode="multiple"
+        header={<CustomHeader handleSubmit={handleSubmit} />}
+        headerClassName="custom-header"
+        headerStyle={{ width: "3rem" }}
+      />
+    ),
+    [handleSubmit]
+  );
   // Handle selection changes
   const handleSelectionChange = (
     e: DataTableSelectionMultipleChangeEvent<DataTableValueArray>
@@ -122,39 +176,7 @@ const Tables = () => {
     fetchData();
   }, [fetchData]);
 
-  const handleSubmit = useCallback(
-    (value: string) => {
-      visitedPage.current = [];
-      const numToSelect = Number(value);
-      const newSelections = new Map(allSelections);
-
-      if (page === 1) {
-        if (numToSelect <= artworks.length) {
-          // Select only items on the current page up to the desired number
-          artworks.slice(0, numToSelect).forEach((item) => {
-            newSelections.set(item.id, item);
-          });
-        } else {
-          // Select all items on the current page
-          artworks.forEach((item) => {
-            newSelections.set(item.id, item);
-          });
-          setPagesHaveSelectedItems(Math.ceil(numToSelect / rows));
-          setLastPageHaveSelectedItems(numToSelect % rows);
-        }
-      }
-
-      setAllSelections(newSelections);
-
-      // Update selected products
-      setSelectedProducts(
-        artworks.filter((item) => newSelections.has(item.id))
-      );
-    },
-    [artworks, page, rows, allSelections]
-  );
-
-  const onPageChange = (event: PaginatorPageChangeEvent) => {
+  const onPageChange = useCallback((event: PaginatorPageChangeEvent) => {
     setPage(event.page + 1);
     setRows(event.rows);
 
@@ -164,7 +186,7 @@ const Tables = () => {
     );
 
     setSelectedProducts(currentPageSelections);
-  };
+  }, []);
 
   return (
     <div className="container mx-auto max-w-7xl">
@@ -177,19 +199,14 @@ const Tables = () => {
         onSelectionChange={handleSelectionChange}
         dataKey="id"
       >
-        <Column
-          selectionMode="multiple"
-          header={<CustomHeader handleSubmit={handleSubmit} />}
-          headerClassName="custom-header"
-          headerStyle={{ width: "3rem" }}
-        />
+        {SelectionColumn}
         {columns.map((column, i) => (
           <Column key={i} field={column.field} header={column.header} />
         ))}
       </DataTable>
       <Paginator
-        first={(page - 1) * paginationData.limit}
-        rows={paginationData.limit}
+        first={(page - 1) * rows}
+        rows={rows}
         totalRecords={paginationData.total}
         onPageChange={onPageChange}
         pageLinkSize={7}
